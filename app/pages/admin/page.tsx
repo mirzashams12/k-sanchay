@@ -9,6 +9,8 @@ import {
     Clock
 } from "lucide-react";
 
+export const dynamic = 'force-dynamic';
+
 const stats = [
     {
         label: "Total Members",
