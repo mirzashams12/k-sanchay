@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 /* eslint-disable react/no-unescaped-entities */
 "use client";
 
@@ -8,8 +9,6 @@ import {
     AlertCircle,
     Clock
 } from "lucide-react";
-
-export const dynamic = 'force-dynamic';
 
 const stats = [
     {
