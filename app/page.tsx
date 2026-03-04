@@ -1,3 +1,4 @@
+/* eslint-disable react/no-unescaped-entities */
 "use client";
 import Image from "next/image";
 import {
@@ -5,6 +6,7 @@ import {
   Plus,
 } from "lucide-react";
 import { motion } from "framer-motion";
+import Link from "next/link";
 
 export default function Component() {
   return (
@@ -21,6 +23,13 @@ export default function Component() {
           <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
             Sanchayika
           </h1>
+        </div>
+        <div className="flex items-center gap-4">
+          <Link href="/login" passHref>
+            <button className="px-6 py-2 font-semibold text-white bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full shadow-lg hover:shadow-xl hover:scale-105 transform transition-all duration-200 ease-in-out">
+              Login
+            </button>
+          </Link>
         </div>
       </header>
       <main className="flex-1 p-6">
