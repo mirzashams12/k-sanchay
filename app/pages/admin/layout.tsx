@@ -16,10 +16,10 @@ import {
 } from "lucide-react";
 
 const sidebarItems = [
-    { icon: LayoutDashboard, label: "Overview", href: "/admin" },
-    { icon: Users, label: "Members", href: "/admin/members" },
-    { icon: History, label: "Transactions", href: "/admin/transactions" },
-    { icon: Settings, label: "Settings", href: "/admin/settings" },
+    { icon: LayoutDashboard, label: "Overview", href: "/pages/admin" },
+    { icon: Users, label: "Members", href: "/pages/admin/members" },
+    { icon: History, label: "Transactions", href: "/pages/admin/transactions" },
+    { icon: Settings, label: "Settings", href: "/pages/admin/settings" },
 ];
 
 export default function AdminLayout({

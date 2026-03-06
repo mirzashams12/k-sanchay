@@ -18,11 +18,11 @@ export const metadata: Metadata = {
 };
 
 const navItems = [
-    { icon: Home, label: "Dashboard", href: "/user" },
-    { icon: Wallet, label: "My Savings", href: "/user/savings" },
-    { icon: CreditCard, label: "Loans", href: "/user/loans" },
-    { icon: ArrowUpRight, label: "Transactions", href: "/user/transactions" },
-    { icon: User, label: "Profile", href: "/user/profile" },
+    { icon: Home, label: "Dashboard", href: "/pages/user" },
+    { icon: Wallet, label: "My Savings", href: "/pages/user/savings" },
+    { icon: CreditCard, label: "Loans", href: "/pages/user/loans" },
+    { icon: ArrowUpRight, label: "Transactions", href: "/pages/user/transactions" },
+    { icon: User, label: "Profile", href: "/pages/user/profile" },
 ];
 
 export default function UserLayout({
