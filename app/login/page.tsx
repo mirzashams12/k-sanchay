@@ -16,17 +16,6 @@ export default function LoginPage() {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    useEffect(() => {
-        const checkUser = async () => {
-            const supabase = createClient();
-            const { data: { session } } = await supabase.auth.getSession();
-            if (session) {
-                router.push("/pages/admin");
-            }
-        };
-        checkUser();
-    }, [router]);
-
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsLoading(true);
@@ -47,7 +36,7 @@ export default function LoginPage() {
             setError("Invalid username or password");
             setIsLoading(false);
         } else {
-            router.push("/pages/admin");
+            router.push("/");
             router.refresh();
         }
     };
