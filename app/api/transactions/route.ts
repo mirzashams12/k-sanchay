@@ -13,17 +13,23 @@ export async function GET() {
                 contributions (
                     id,
                     amount,
-                    contribution_date
+                    contribution_date,
+                    created_at,
+                    updated_at
                 ),
                 loans (
                     id,
                     loan_amount,
                     loan_date,
                     status,
+                    created_at,
+                    updated_at,
                     repayments (
                         id,
                         amount_paid,
-                        payment_date
+                        payment_date,
+                        created_at,
+                        updated_at
                     )
                 )
                 `)
@@ -47,8 +53,8 @@ export async function GET() {
                 status: 'completed' as TransactionStatus,
                 date: c.contribution_date,
                 payment_method: 'cash' as PaymentMethod, // Defaulting as per Sanchayika typical use
-                created_at: c.contribution_date,
-                updated_at: c.contribution_date,
+                created_at: c.created_at,
+                updated_at: c.updated_at,
             }));
 
             // 2. Map Loans
@@ -63,8 +69,8 @@ export async function GET() {
                 date: l.loan_date,
                 payment_method: 'bank_transfer' as PaymentMethod,
                 description: `Loan Disbursement`,
-                created_at: l.loan_date,
-                updated_at: l.loan_date,
+                created_at: l.created_at,
+                updated_at: l.updated_at,
             }));
 
             // 3. Map Repayments
@@ -80,15 +86,20 @@ export async function GET() {
                     date: r.payment_date,
                     payment_method: 'cash' as PaymentMethod,
                     description: `Repayment for Loan #${l.id}`,
-                    created_at: r.payment_date,
-                    updated_at: r.payment_date,
+                    created_at: r.created_at,
+                    updated_at: r.updated_at,
                 }))
             );
 
             return [...contributions, ...loans, ...repayments];
         });
 
-        return NextResponse.json(allTransactions);
+        // Sort all transactions by created_at in descending order (newest first)
+        const sortedTransactions = allTransactions.sort((a, b) =>
+            new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        );
+
+        return NextResponse.json(sortedTransactions);
     } catch (error) {
         const message = error instanceof Error ? error.message : 'An unknown error occurred';
         return NextResponse.json({ error: message }, { status: 500 });
@@ -273,4 +284,3 @@ export async function DELETE(request: Request) {
         return NextResponse.json({ error: message }, { status: 500 });
     }
 }
-

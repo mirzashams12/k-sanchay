@@ -102,7 +102,6 @@ export default function TransactionList({ transactions, searchTerm, onRefresh }:
                                         </div>
                                         <div>
                                             <p className="text-sm font-semibold text-slate-900 dark:text-white uppercase">{transaction.type.replace('_', ' ')}</p>
-                                            <p className="text-xs text-slate-500 font-mono">{transaction.reference_id}</p>
                                         </div>
                                     </div>
                                 </td>
@@ -174,7 +173,6 @@ export default function TransactionList({ transactions, searchTerm, onRefresh }:
                                 </div>
                                 <div>
                                     <p className="text-sm font-bold text-slate-900 dark:text-white uppercase">{transaction.type.replace('_', ' ')}</p>
-                                    <p className="text-[10px] text-slate-500 font-mono">{transaction.reference_id}</p>
                                 </div>
                             </div>
                             <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${transaction.status === 'completed' ? 'bg-green-100 text-green-700' :
