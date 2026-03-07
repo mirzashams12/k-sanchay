@@ -74,8 +74,8 @@ export default function TransactionList({ transactions, searchTerm, onRefresh }:
     };
 
     return (
-        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
-            <div className="overflow-x-auto">
+        <div className="space-y-4">
+            <div className="hidden md:block bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
                 <table className="w-full text-left border-collapse">
                     <thead>
                         <tr className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800">
@@ -154,6 +154,83 @@ export default function TransactionList({ transactions, searchTerm, onRefresh }:
                         ))}
                     </tbody>
                 </table>
+            </div>
+
+            {/* Mobile View */}
+            <div className="md:hidden space-y-4">
+                {filteredTransactions.map((transaction, index) => (
+                    <motion.div
+                        key={transaction.id}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: index * 0.05 }}
+                        onClick={() => handleViewInfo(transaction)}
+                        className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-4"
+                    >
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <div className={`p-2 rounded-lg ${transaction.type === 'deposit' ? 'bg-green-100 text-green-600' : 'bg-blue-100 text-blue-600'}`}>
+                                    {transaction.type === 'deposit' ? <ArrowDownLeft className="w-4 h-4" /> : <ArrowUpRight className="w-4 h-4" />}
+                                </div>
+                                <div>
+                                    <p className="text-sm font-bold text-slate-900 dark:text-white uppercase">{transaction.type.replace('_', ' ')}</p>
+                                    <p className="text-[10px] text-slate-500 font-mono">{transaction.reference_id}</p>
+                                </div>
+                            </div>
+                            <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${transaction.status === 'completed' ? 'bg-green-100 text-green-700' :
+                                transaction.status === 'pending' ? 'bg-amber-100 text-amber-700' :
+                                    'bg-red-100 text-red-700'
+                                }`}>
+                                {transaction.status}
+                            </span>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4 py-3 border-y border-slate-100 dark:border-slate-800">
+                            <div>
+                                <p className="text-[10px] uppercase text-slate-400 font-bold mb-1">Member</p>
+                                <p className="text-sm font-medium text-slate-900 dark:text-white truncate">{transaction.member_name}</p>
+                                <p className="text-[10px] text-slate-500">{new Date(transaction.date).toLocaleDateString()}</p>
+                            </div>
+                            <div className="text-right">
+                                <p className="text-[10px] uppercase text-slate-400 font-bold mb-1">Amount</p>
+                                <p className="text-sm font-bold text-slate-900 dark:text-white">₹{transaction.amount}</p>
+                                <p className="text-[10px] uppercase text-slate-400">{transaction.payment_method}</p>
+                            </div>
+                        </div>
+
+                        <div className="flex items-center justify-between pt-1">
+                            <button
+                                onClick={() => handleViewInfo(transaction)}
+                                className="flex items-center gap-2 px-3 py-2 text-xs font-medium text-blue-600 bg-blue-50 dark:bg-blue-900/20 rounded-xl transition-colors"
+                            >
+                                <Eye className="w-3.5 h-3.5" />
+                                Details
+                            </button>
+                            <div className="flex items-center gap-2">
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleEdit(transaction);
+                                    }}
+                                    className="p-2 text-amber-600 bg-amber-50 dark:bg-amber-900/20 rounded-xl transition-colors"
+                                    title="Edit"
+                                >
+                                    <Edit2 className="w-4 h-4" />
+                                </button>
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleDeleteClick(transaction);
+                                    }}
+                                    className="p-2 text-red-600 bg-red-50 dark:bg-red-900/20 rounded-xl transition-colors"
+                                    title="Delete"
+                                >
+                                    <Trash2 className="w-4 h-4" />
+                                </button>
+                            </div>
+                        </div>
+                    </motion.div>
+                ))}
             </div>
 
             {selectedTransaction && (
