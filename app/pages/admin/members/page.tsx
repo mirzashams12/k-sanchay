@@ -50,9 +50,6 @@ export default function MembersPage() {
                 </button>
             </div>
 
-            {/* Search and Filters */}
-            <div className="flex flex-col md:flex-row gap-4"> ... </div>
-
             {isLoading ? (
                 <div className="flex flex-col items-center justify-center py-20 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800">
                     <Loader2 className="w-8 h-8 text-blue-600 animate-spin mb-4" />
