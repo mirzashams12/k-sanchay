@@ -1,27 +1,41 @@
 "use client";
 
-import { useState } from "react";
-import { motion } from "framer-motion";
+import { useState, useEffect } from "react";
 import {
     Search,
-    ArrowUpRight,
-    ArrowDownLeft,
     Filter,
     Download,
     Calendar,
-    MoreHorizontal
+    Plus,
+    Loader2
 } from "lucide-react";
-
-const transactions = [
-    { id: "TXN-001", user: "Rahul Sharma", type: "deposit", amount: "₹500", date: "May 28, 2024", status: "completed", category: "Weekly Savings" },
-    { id: "TXN-002", user: "Anjali Nair", type: "withdrawal", amount: "₹2,000", date: "May 27, 2024", status: "completed", category: "Loan Disbursement" },
-    { id: "TXN-003", user: "Suresh Kumar", type: "deposit", amount: "₹500", date: "May 26, 2024", status: "pending", category: "Weekly Savings" },
-    { id: "TXN-004", user: "Priya Lakshmi", type: "deposit", amount: "₹1,200", date: "May 25, 2024", status: "completed", category: "Loan Repayment" },
-    { id: "TXN-005", user: "Amit Patel", type: "fine", amount: "₹50", date: "May 24, 2024", status: "completed", category: "Late Fee" },
-];
+import TransactionList from "@/app/components/admin/transactions/list";
+import CreateTransactionModal from "@/app/components/admin/transactions/create";
+import { Transaction } from "@/app/types/transaction";
 
 export default function TransactionsPage() {
     const [searchTerm, setSearchTerm] = useState("");
+    const [transactions, setTransactions] = useState<Transaction[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+
+    const fetchTransactions = async () => {
+        try {
+            const response = await fetch("/api/transactions");
+            if (response.ok) {
+                const data = await response.json();
+                setTransactions(data);
+            }
+        } catch (error) {
+            console.error("Failed to fetch transactions:", error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchTransactions();
+    }, []);
 
     return (
         <div className="space-y-8">
@@ -30,10 +44,19 @@ export default function TransactionsPage() {
                     <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Transaction History</h1>
                     <p className="text-slate-500 dark:text-slate-400">Track all financial activities across the organization.</p>
                 </div>
-                <button className="flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-medium transition-all">
-                    <Download className="w-5 h-5" />
-                    Export Report
-                </button>
+                <div className="flex gap-3">
+                    <button className="flex items-center justify-center gap-2 px-4 py-2.5 border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 rounded-xl font-medium transition-all hover:bg-slate-50 dark:hover:bg-slate-800">
+                        <Download className="w-5 h-5" />
+                        Export
+                    </button>
+                    <button
+                        onClick={() => setIsCreateModalOpen(true)}
+                        className="flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-medium transition-all shadow-lg shadow-blue-500/20"
+                    >
+                        <Plus className="w-5 h-5" />
+                        New Transaction
+                    </button>
+                </div>
             </div>
 
             <div className="flex flex-col md:flex-row gap-4">
@@ -59,71 +82,23 @@ export default function TransactionsPage() {
                 </div>
             </div>
 
-            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left border-collapse">
-                        <thead>
-                            <tr className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800">
-                                <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500">Transaction ID</th>
-                                <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500">User</th>
-                                <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500">Category</th>
-                                <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500">Amount</th>
-                                <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500">Status</th>
-                                <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500 text-right">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                            {transactions
-                                .filter(t => t.user.toLowerCase().includes(searchTerm.toLowerCase()) || t.id.toLowerCase().includes(searchTerm.toLowerCase()))
-                                .map((txn, index) => (
-                                    <motion.tr
-                                        key={txn.id}
-                                        initial={{ opacity: 0, y: 10 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        transition={{ delay: index * 0.05 }}
-                                        className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
-                                    >
-                                        <td className="px-6 py-4">
-                                            <span className="text-sm font-mono font-medium text-slate-500">{txn.id}</span>
-                                            <p className="text-[10px] text-slate-400 mt-0.5">{txn.date}</p>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <p className="text-sm font-semibold text-slate-900 dark:text-white">{txn.user}</p>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <div className="flex items-center gap-2">
-                                                {txn.type === 'deposit' ? (
-                                                    <ArrowDownLeft className="w-4 h-4 text-green-500" />
-                                                ) : (
-                                                    <ArrowUpRight className="w-4 h-4 text-red-500" />
-                                                )}
-                                                <span className="text-sm text-slate-600 dark:text-slate-400">{txn.category}</span>
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <span className={`text-sm font-bold ${txn.type === 'deposit' ? 'text-green-600' : 'text-red-600'}`}>
-                                                {txn.type === 'deposit' ? '+' : '-'}{txn.amount}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${txn.status === 'completed'
-                                                ? 'bg-green-100 text-green-700 dark:bg-green-900/30'
-                                                : 'bg-amber-100 text-amber-700 dark:bg-amber-900/30'
-                                                }`}>
-                                                {txn.status}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-4 text-right">
-                                            <button className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-lg transition-colors">
-                                                <MoreHorizontal className="w-5 h-5" />
-                                            </button>
-                                        </td>
-                                    </motion.tr>
-                                ))}
-                        </tbody>
-                    </table>
+            {isLoading ? (
+                <div className="flex flex-col items-center justify-center py-20 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800">
+                    <Loader2 className="w-8 h-8 text-blue-600 animate-spin mb-4" />
+                    <p className="text-slate-500">Loading transactions...</p>
                 </div>
-            </div>
+            ) : (
+                <TransactionList transactions={transactions} searchTerm={searchTerm} onRefresh={fetchTransactions} />
+            )}
+
+            <CreateTransactionModal
+                isOpen={isCreateModalOpen}
+                onClose={() => setIsCreateModalOpen(false)}
+                onSuccess={() => {
+                    setIsCreateModalOpen(false);
+                    fetchTransactions();
+                }}
+            />
         </div>
     );
 }

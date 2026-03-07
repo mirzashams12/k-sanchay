@@ -5,10 +5,6 @@ export async function GET() {
     try {
         const supabase = await createClient();
 
-        const { data: { user } } = await supabase.auth.getUser();
-
-        console.log("Current User ID:", user?.id);
-
         const { data, error } = await supabase
             .from('members')
             .select('*')
