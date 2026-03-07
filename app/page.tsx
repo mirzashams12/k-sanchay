@@ -7,8 +7,42 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 import Link from "next/link";
+import { useEffect, useState } from "react";
+import { createClient } from "./lib/supabase/client";
+import { useRouter } from "next/navigation";
+import Loading from "./loading";
 
 export default function Component() {
+  const router = useRouter();
+  const [isChecking, setIsChecking] = useState(true);
+
+  useEffect(() => {
+    const checkUser = async () => {
+      const supabase = createClient();
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("role")
+          .eq("id", session.user?.id)
+          .single();
+
+        if (profile?.role === "admin") {
+          router.push("/pages/admin");
+        } if (profile?.role === "member") {
+          router.push("/pages/user");
+        }
+      } else {
+        setIsChecking(false);
+      }
+    };
+    checkUser();
+  }, [router]);
+
+  if (isChecking) {
+    return <Loading />;
+  }
+
   return (
     <div className="flex flex-col min-h-screen bg-gray-50 dark:bg-gray-900">
       <header className="flex items-center justify-between px-6 py-4 bg-white dark:bg-gray-800 shadow-sm">

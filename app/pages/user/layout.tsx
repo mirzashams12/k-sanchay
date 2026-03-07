@@ -1,6 +1,9 @@
 //generate a nice and latest kind of layout for user
+"use client";
+
 import { Metadata } from "next";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
 import {
     Home,
@@ -11,11 +14,7 @@ import {
     Bell,
     CreditCard
 } from "lucide-react";
-
-export const metadata: Metadata = {
-    title: "Member Dashboard | Sanchayika",
-    description: "Manage your personal Sanchayika account",
-};
+import { createClient } from "@/app/lib/supabase/client";
 
 const navItems = [
     { icon: Home, label: "Dashboard", href: "/pages/user" },
@@ -30,6 +29,15 @@ export default function UserLayout({
 }: {
     children: React.ReactNode;
 }) {
+    const router = useRouter();
+    const supabase = createClient();
+
+    const handleLogout = async () => {
+        await supabase.auth.signOut();
+        router.push("/login");
+        router.refresh();
+    };
+
     return (
         <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col md:flex-row">
             {/* Sidebar */}
@@ -63,7 +71,10 @@ export default function UserLayout({
                 </nav>
 
                 <div className="p-6 border-t border-slate-200 dark:border-slate-800">
-                    <button className="flex items-center gap-3 w-full px-4 py-3 text-sm font-medium text-red-600 hover:bg-red-50 dark:hover:bg-red-900/10 rounded-xl transition-colors">
+                    <button
+                        onClick={handleLogout}
+                        className="flex items-center gap-3 w-full px-4 py-3 text-sm font-medium text-red-600 hover:bg-red-50 dark:hover:bg-red-900/10 rounded-xl transition-colors"
+                    >
                         <LogOut className="w-5 h-5" />
                         Logout
                     </button>
