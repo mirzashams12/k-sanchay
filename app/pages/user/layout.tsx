@@ -1,23 +1,25 @@
 //generate a nice and latest kind of layout for user
 "use client";
 
-import { Metadata } from "next";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import Image from "next/image";
 import {
-    Home,
+    LayoutDashboard,
     Wallet,
     ArrowUpRight,
     User,
     LogOut,
     Bell,
-    CreditCard
+    CreditCard,
+    Menu,
+    X
 } from "lucide-react";
-import { createClient } from "@/app/lib/supabase/client";
+import RoleGuard from "@/app/components/auth/RoleGuard";
+import { useApp } from "@/app/context/AppContext";
+import { useState } from "react";
 
 const navItems = [
-    { icon: Home, label: "Dashboard", href: "/pages/user" },
+    { icon: LayoutDashboard, label: "Dashboard", href: "/pages/user" },
     { icon: Wallet, label: "My Savings", href: "/pages/user/savings" },
     { icon: CreditCard, label: "Loans", href: "/pages/user/loans" },
     { icon: ArrowUpRight, label: "Transactions", href: "/pages/user/transactions" },
@@ -29,81 +31,103 @@ export default function UserLayout({
 }: {
     children: React.ReactNode;
 }) {
-    const router = useRouter();
-    const supabase = createClient();
+    const { user, logout } = useApp();
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
     const handleLogout = async () => {
-        await supabase.auth.signOut();
-        router.push("/login");
-        router.refresh();
+        logout();
     };
 
     return (
-        <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col md:flex-row">
-            {/* Sidebar */}
-            <aside className="hidden md:flex flex-col w-72 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800">
-                <div className="p-8 flex items-center gap-3">
-                    <div className="bg-blue-600 p-1.5 rounded-xl">
+        <RoleGuard allowedRoles={['member', 'admin']}>
+            <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex flex-col md:flex-row">
+                {/* Mobile Header */}
+                <header className="md:hidden h-16 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between px-4 sticky top-0 z-50">
+                    <button
+                        onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                        className="p-2 text-gray-600 dark:text-gray-400"
+                    >
+                        {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+                    </button>
+
+                    <div className="flex items-center gap-2">
+                        <Image src="/sanchayika-icon.png" alt="Sanchayika" width={28} height={28} className="rounded-full" />
+                        <span className="font-bold text-lg text-gray-900 dark:text-white">Sanchayika</span>
+                    </div>
+
+                </header>
+
+                {/* Sidebar */}
+                <aside className={`
+                ${isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"} 
+                md:translate-x-0 fixed md:static inset-y-0 left-0 z-40 w-64 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 transition-transform duration-300 ease-in-out flex flex-col
+            `}>
+                    <div className="p-6 flex items-center gap-3">
                         <Image
                             src="/sanchayika-icon.png"
                             alt="Sanchayika"
-                            width={28}
-                            height={28}
-                            className="brightness-0 invert"
+                            width={32}
+                            height={32}
+                            className="rounded-full"
                         />
+                        <span className="font-bold text-xl tracking-tight text-gray-900 dark:text-white">
+                            {user?.user_metadata?.display_name ?? "Member"}
+                        </span>
                     </div>
-                    <span className="font-bold text-xl tracking-tight text-slate-900 dark:text-white">
-                        Sanchayika
-                    </span>
-                </div>
 
-                <nav className="flex-1 px-6 space-y-2 mt-4">
-                    {navItems.map((item) => (
-                        <Link
-                            key={item.label}
-                            href={item.href}
-                            className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-all duration-200 group"
+                    <nav className="flex-1 px-4 space-y-1 mt-4">
+                        {navItems.map((item) => (
+                            <Link
+                                key={item.label}
+                                href={item.href}
+                                onClick={() => setIsMobileMenuOpen(false)}
+                                className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+                            >
+                                <item.icon className="w-5 h-5" />
+                                <span>{item.label}</span>
+                            </Link>
+                        ))}
+                    </nav>
+
+                    <div className="p-4 border-t border-gray-200 dark:border-gray-800">
+                        <button
+                            onClick={handleLogout}
+                            className="flex items-center gap-3 w-full px-4 py-3 text-sm font-medium text-red-600 hover:bg-red-50 dark:hover:bg-red-900/10 rounded-lg transition-colors"
                         >
-                            <item.icon className="w-5 h-5 group-hover:text-blue-600 dark:group-hover:text-blue-400" />
-                            {item.label}
-                        </Link>
-                    ))}
-                </nav>
-
-                <div className="p-6 border-t border-slate-200 dark:border-slate-800">
-                    <button
-                        onClick={handleLogout}
-                        className="flex items-center gap-3 w-full px-4 py-3 text-sm font-medium text-red-600 hover:bg-red-50 dark:hover:bg-red-900/10 rounded-xl transition-colors"
-                    >
-                        <LogOut className="w-5 h-5" />
-                        Logout
-                    </button>
-                </div>
-            </aside>
-
-            {/* Main Content */}
-            <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-                <header className="h-20 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-8 sticky top-0 z-10">
-                    <div className="flex items-center gap-2">
-                        <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-200">Welcome back, Member</h2>
-                    </div>
-                    <div className="flex items-center gap-4">
-                        <button className="p-2.5 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors relative">
-                            <Bell className="w-5 h-5" />
-                            <span className="absolute top-2 right-2 w-2 h-2 bg-blue-600 rounded-full border-2 border-white dark:border-slate-900"></span>
+                            <LogOut className="w-5 h-5" />
+                            Logout
                         </button>
-                        <div className="flex items-center gap-3 pl-4 border-l border-slate-200 dark:border-slate-800">
-                            <div className="h-10 w-10 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-500 shadow-lg shadow-blue-500/20" />
-                        </div>
                     </div>
-                </header>
+                </aside>
 
-                <main className="flex-1 overflow-y-auto p-6 md:p-10">
-                    <div className="max-w-6xl mx-auto">
-                        {children}
-                    </div>
-                </main>
+                {/* Mobile Overlay */}
+                {isMobileMenuOpen && (
+                    <div className="fixed inset-0 bg-black/50 z-30 md:hidden" onClick={() => setIsMobileMenuOpen(false)} />
+                )}
+
+                {/* Main Content */}
+                <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+                    <header className="hidden md:flex h-16 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 items-center justify-between px-8">
+                        <div className="flex items-center gap-2">
+                            <User className="w-5 h-5 text-blue-500" />
+                            <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Member Dashboard</span>
+                        </div>
+                        <div className="flex items-center gap-4">
+                            <button className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 relative">
+                                <Bell className="w-5 h-5" />
+                                <span className="absolute top-2 right-2 w-2 h-2 bg-blue-600 rounded-full"></span>
+                            </button>
+                            <div className="h-8 w-8 rounded-full bg-gradient-to-tr from-blue-500 to-cyan-400" />
+                        </div>
+                    </header>
+
+                    <main className="flex-1 overflow-y-auto p-8">
+                        <div className="max-w-7xl mx-auto">
+                            {children}
+                        </div>
+                    </main>
+                </div>
             </div>
-        </div>
+        </RoleGuard>
     );
 }
