@@ -7,14 +7,26 @@ import Link from "next/link";
 import { motion } from "framer-motion"; // Optimized for newer framer-motion versions
 import { Eye, EyeOff, Lock, User } from "lucide-react"; // Changed Mail to User
 import { createClient } from "../lib/supabase/client";
+import { useApp } from "../context/AppContext";
 
 export default function LoginPage() {
     const router = useRouter();
+    const { role, refreshSession } = useApp();
     const [username, setUsername] = useState(""); // Changed from email
     const [password, setPassword] = useState("");
     const [showPassword, setShowPassword] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+
+    useEffect(() => {
+        if (role) {
+            if (role === "admin") {
+                router.push("/pages/admin");
+            } if (role === "member") {
+                router.push("/pages/user");
+            }
+        }
+    }, [router, role]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -36,8 +48,8 @@ export default function LoginPage() {
             setError("Invalid username or password");
             setIsLoading(false);
         } else {
-            router.push("/");
             router.refresh();
+            refreshSession();
         }
     };
 

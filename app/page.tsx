@@ -1,171 +1,111 @@
-/* eslint-disable react/no-unescaped-entities */
+
 "use client";
 import Image from "next/image";
 import {
-  ChevronRight,
-  Plus,
+  ArrowRight,
+  ShieldCheck,
+  TrendingUp,
+  Users,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { useEffect, useState } from "react";
-import { createClient } from "./lib/supabase/client";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Loading from "./loading";
+import { useApp } from "./context/AppContext";
 
 export default function Component() {
+  const { role, loading } = useApp();
   const router = useRouter();
-  const [isChecking, setIsChecking] = useState(true);
 
   useEffect(() => {
-    const checkUser = async () => {
-      const supabase = createClient();
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("role")
-          .eq("id", session.user?.id)
-          .single();
-
-        if (profile?.role === "admin") {
-          router.push("/pages/admin");
-        } if (profile?.role === "member") {
-          router.push("/pages/user");
-        }
-      } else {
-        setIsChecking(false);
+    if (role) {
+      if (role === "admin") {
+        router.push("/pages/admin");
+      } if (role === "member") {
+        router.push("/pages/user");
       }
-    };
-    checkUser();
-  }, [router]);
+    }
+  }, [router, role]);
 
-  if (isChecking) {
+  // If loading or if a role exists (meaning redirection is about to happen), 
+  // show the landing/splash UI to prevent dashboard flickering
+  if (loading || role) {
     return <Loading />;
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-gray-50 dark:bg-gray-900">
-      <header className="flex items-center justify-between px-6 py-4 bg-white dark:bg-gray-800 shadow-sm">
-        <div className="flex items-center gap-4">
-          <Image
-            src="/sanchayika-icon.png"
-            alt="Sanchayika"
-            width={40}
-            height={40}
-            className="rounded-full"
-          />
-          <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col">
+      <nav className="flex items-center justify-between px-8 py-6 max-w-7xl mx-auto w-full">
+        <div className="flex items-center gap-3">
+          <div className="bg-blue-600 p-2 rounded-xl shadow-lg shadow-blue-500/20">
+            <Image
+              src="/sanchayika-icon.png"
+              alt="Sanchayika"
+              width={32}
+              height={32}
+              className="brightness-0 invert"
+            />
+          </div>
+          <span className="font-bold text-2xl tracking-tight text-slate-900 dark:text-white">
             Sanchayika
+          </span>
+        </div>
+        <Link href="/login">
+          <button className="px-4 py-2 md:px-6 md:py-2.5 text-sm md:text-base font-semibold text-white bg-blue-600 rounded-xl shadow-lg shadow-blue-500/25 hover:bg-blue-700 transition-all active:scale-95">
+            Sign In
+          </button>
+        </Link>
+      </nav>
+
+      <main className="flex-1 flex flex-col items-center justify-center px-6 text-center max-w-4xl mx-auto">
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+        >
+          <span className="px-4 py-1.5 rounded-full bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-sm font-medium mb-6 inline-block">
+            Empowering Kudumbasree Units
+          </span>
+          <h1 className="text-5xl md:text-7xl font-extrabold text-slate-900 dark:text-white mb-6 tracking-tight">
+            Smart Money Management for <span className="text-blue-600">Community.</span>
           </h1>
-        </div>
-        <div className="flex items-center gap-4">
-          <Link href="/login" passHref>
-            <button className="px-6 py-2 font-semibold text-white bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full shadow-lg hover:shadow-xl hover:scale-105 transform transition-all duration-200 ease-in-out">
-              Login
-            </button>
-          </Link>
-        </div>
-      </header>
-      <main className="flex-1 p-6">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-6"
-        >
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">
-            Welcome Back
-          </h2>
-          <p className="text-gray-600 dark:text-gray-400">
-            Here's a summary of your account.
+          <p className="text-lg md:text-xl text-slate-600 dark:text-slate-400 mb-10 max-w-2xl mx-auto leading-relaxed">
+            A modern, secure, and transparent platform designed to help Kudumbasree members track savings, manage loans, and grow together.
           </p>
-        </motion.div>
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-        >
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
-              Total Balance
-            </h3>
-            <p className="text-3xl font-bold text-green-500">₹1,25,000</p>
-          </div>
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
-              Total Loan
-            </h3>
-            <p className="text-3xl font-bold text-red-500">₹25,000</p>
-          </div>
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
-              Total Fines
-            </h3>
-            <p className="text-3xl font-bold text-yellow-500">₹500</p>
+
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Link href="/login">
+              <button className="group flex items-center justify-center gap-2 px-6 py-3.5 md:px-8 md:py-4 bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold rounded-2xl hover:opacity-90 transition-all w-full sm:w-auto active:scale-[0.98] touch-manipulation">
+                Get Started <ArrowRight className="w-5 h-5" />
+              </button>
+            </Link>
           </div>
         </motion.div>
+
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.4 }}
-          className="mt-6"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.4, duration: 1 }}
+          className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-20 w-full"
         >
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md">
-            <div className="p-6 border-b border-gray-200 dark:border-gray-700">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                Recent Transactions
-              </h3>
+          {[
+            { icon: ShieldCheck, title: "Secure", desc: "Enterprise-grade security for your funds" },
+            { icon: TrendingUp, title: "Transparent", desc: "Real-time tracking of all transactions" },
+            { icon: Users, title: "Community", desc: "Built for collective financial growth" }
+          ].map((feature, i) => (
+            <div key={i} className="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-left">
+              <feature.icon className="w-10 h-10 text-blue-600 mb-4" />
+              <h3 className="font-bold text-slate-900 dark:text-white mb-2">{feature.title}</h3>
+              <p className="text-sm text-slate-500 dark:text-slate-400">{feature.desc}</p>
             </div>
-            <ul className="divide-y divide-gray-200 dark:divide-gray-700">
-              <li className="flex items-center justify-between p-4 hover:bg-gray-100 dark:hover:bg-gray-700">
-                <div className="flex items-center gap-4">
-                  <div className="bg-green-100 dark:bg-green-900 p-2 rounded-full">
-                    <Plus className="w-5 h-5 text-green-500" />
-                  </div>
-                  <div>
-                    <p className="font-semibold text-gray-900 dark:text-gray-100">
-                      Weekly Deposit
-                    </p>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      May 28, 2024
-                    </p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <p className="font-semibold text-green-500">+₹500</p>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
-                    Balance: ₹1,25,500
-                  </p>
-                </div>
-                <ChevronRight className="w-5 h-5 text-gray-500" />
-              </li>
-              <li className="flex items-center justify-between p-4 hover:bg-gray-100 dark:hover:bg-gray-700">
-                <div className="flex items-center gap-4">
-                  <div className="bg-red-100 dark:bg-red-900 p-2 rounded-full">
-                    <Plus className="w-5 h-5 text-red-500" />
-                  </div>
-                  <div>
-                    <p className="font-semibold text-gray-900 dark:text-gray-100">
-                      Loan Repayment
-                    </p>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      May 25, 2024
-                    </p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <p className="font-semibold text-red-500">-₹1,000</p>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
-                    Balance: ₹1,25,000
-                  </p>
-                </div>
-                <ChevronRight className="w-5 h-5 text-gray-500" />
-              </li>
-            </ul>
-          </div>
+          ))}
         </motion.div>
       </main>
+
+      <footer className="py-10 text-center text-slate-400 dark:text-slate-600 text-sm">
+        <p>© {new Date().getFullYear()} Sanchayika. All rights reserved.</p>
+      </footer>
     </div>
   );
 }

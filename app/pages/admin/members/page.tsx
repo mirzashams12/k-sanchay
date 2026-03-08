@@ -1,38 +1,20 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
-    UserPlus,
-    Loader2
+    UserPlus
 } from "lucide-react";
 import MemberList from "@/app/components/admin/members/list";
 import CreateMemberModal from "@/app/components/admin/members/create";
-import { Member } from "@/app/types/member";
+import { useApp } from "@/app/context/AppContext";
+import Loading from "./loading";
 
 export default function MembersPage() {
+    const { members, loading, refreshData } = useApp();
     const [searchTerm] = useState("");
-    const [members, setMembers] = useState<Member[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
-    const fetchMembers = async () => {
-        try {
-            const response = await fetch("/api/members");
 
-            if (response.ok) {
-                const data = await response.json();
-                setMembers(data);
-            }
-        } catch (error) {
-            console.error("Failed to fetch members:", error);
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    useEffect(() => {
-        fetchMembers();
-    }, []);
 
     return (
         <div className="space-y-8">
@@ -50,11 +32,8 @@ export default function MembersPage() {
                 </button>
             </div>
 
-            {isLoading ? (
-                <div className="flex flex-col items-center justify-center py-20 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800">
-                    <Loader2 className="w-8 h-8 text-blue-600 animate-spin mb-4" />
-                    <p className="text-slate-500">Loading members...</p>
-                </div>
+            {loading ? (
+                <Loading />
             ) : (
                 <MemberList members={members} searchTerm={searchTerm} />
             )}
@@ -64,7 +43,7 @@ export default function MembersPage() {
                 onClose={() => setIsCreateModalOpen(false)}
                 onSuccess={() => {
                     setIsCreateModalOpen(false);
-                    fetchMembers();
+                    refreshData();
                 }}
             />
         </div>
