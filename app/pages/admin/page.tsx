@@ -1,5 +1,6 @@
 "use client";
 
+import { useApp } from "@/app/context/AppContext";
 /* eslint-disable react/no-unescaped-entities */
 
 import { motion } from "framer-motion";
@@ -10,32 +11,7 @@ import {
     Clock
 } from "lucide-react";
 
-const stats = [
-    {
-        label: "Total Members",
-        value: "48",
-        change: "+3 this month",
-        icon: Users,
-        color: "text-blue-600",
-        bg: "bg-blue-100 dark:bg-blue-900/20",
-    },
-    {
-        label: "Total Collection",
-        value: "₹4,25,000",
-        change: "+12% vs last month",
-        icon: TrendingUp,
-        color: "text-green-600",
-        bg: "bg-green-100 dark:bg-green-900/20",
-    },
-    {
-        label: "Pending Approvals",
-        value: "5",
-        change: "Requires action",
-        icon: AlertCircle,
-        color: "text-amber-600",
-        bg: "bg-amber-100 dark:bg-amber-900/20",
-    },
-];
+
 
 const recentActivities = [
     { id: 1, user: "Rahul Sharma", action: "Requested a loan", amount: "₹10,000", time: "2 hours ago", status: "pending" },
@@ -44,6 +20,35 @@ const recentActivities = [
 ];
 
 export default function AdminDashboard() {
+    const { members } = useApp();
+
+    const stats = [
+        {
+            label: "Total Members",
+            value: `${members.length}`,
+            change: "+3 this month",
+            icon: Users,
+            color: "text-blue-600",
+            bg: "bg-blue-100 dark:bg-blue-900/20",
+        },
+        {
+            label: "Total Collection",
+            value: "₹4,25,000",
+            change: "+12% vs last month",
+            icon: TrendingUp,
+            color: "text-green-600",
+            bg: "bg-green-100 dark:bg-green-900/20",
+        },
+        {
+            label: "Pending Approvals",
+            value: "5",
+            change: "Requires action",
+            icon: AlertCircle,
+            color: "text-amber-600",
+            bg: "bg-amber-100 dark:bg-amber-900/20",
+        },
+    ];
+
     return (
         <div className="space-y-8">
             <div>

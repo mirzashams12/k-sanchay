@@ -3,18 +3,16 @@
 "use client";
 
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
-import { Member, Transaction } from "@/app/types/index"
+import { Member } from "@/app/types/index"
 import { createClient } from "@/app/lib/supabase/client";
 
 interface AppContextType {
     members: Member[];
-    transactions: Transaction[];
     user: any | null;
     role: string | null;
     loading: boolean;
     error: Error | null;
     refreshData: () => Promise<void>;
-    refreshTransactions: () => Promise<void>;
     refreshMembers: () => Promise<void>;
     refreshSession: () => Promise<void>;
     logout: () => void;
@@ -24,7 +22,6 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export function AppProvider({ children }: { children: ReactNode }) {
     const [members, setMembers] = useState<Member[]>([]);
-    const [transactions, setTransactions] = useState<Transaction[]>([]);
     const [user, setUser] = useState<any | null>(null);
     const [role, setRole] = useState<string | null>(null);
     const [error, setError] = useState<Error | null>(null);
@@ -41,20 +38,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
         }
     };
 
-    const fetchTransactions = async () => {
-        try {
-            const response = await fetch('/api/transactions');
-            if (!response.ok) throw new Error('Failed to fetch transactions');
-            const data = await response.json();
-            setTransactions(data);
-        } catch (err) {
-            console.error('Transaction fetch error:', err);
-        }
-    };
-
     const refreshData = async () => {
         setLoading(true);
-        await Promise.all([fetchMembers(), fetchTransactions()]);
+        await Promise.all([fetchMembers()]);
         setLoading(false);
     };
 
@@ -96,13 +82,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return (
         <AppContext.Provider value={{
             members,
-            transactions,
             user,
             role,
             loading,
             error,
             refreshData,
-            refreshTransactions: fetchTransactions,
             refreshMembers: fetchMembers,
             refreshSession: checkUser,
             logout
