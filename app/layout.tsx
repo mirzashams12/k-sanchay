@@ -10,6 +10,12 @@ const inter = Inter({ subsets: ["latin"] });
 export const metadata: Metadata = {
   title: "Sanchayika",
   description: "Kudumbasree Money Management App",
+  manifest: "/manifest.json",
+  themeColor: "#000000",
+  viewport: "width=device-width, initial-scale=1, maximum-scale=1",
+  icons: {
+    icon: "/sanchayika-icon.png",
+  },
 };
 
 export default function RootLayout({
