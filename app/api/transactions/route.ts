@@ -1,105 +1,17 @@
 import { createClient } from '@/app/lib/supabase/server';
 import { NextResponse } from 'next/server';
-import { PaymentMethod, Transaction, TransactionStatus, TransactionType } from '@/app/types/transaction';
+import { TransactionType } from '@/app/types/transaction';
 
 export async function GET() {
     try {
         const supabase = await createClient();
         const { data, error } = await supabase
-            .from('members')
-            .select(`
-                id,
-                full_name,
-                contributions (
-                    id,
-                    amount,
-                    contribution_date,
-                    created_at,
-                    updated_at
-                ),
-                loans (
-                    id,
-                    loan_amount,
-                    loan_date,
-                    status,
-                    created_at,
-                    updated_at,
-                    repayments (
-                        id,
-                        amount_paid,
-                        payment_date,
-                        created_at,
-                        updated_at
-                    )
-                )
-                `)
-            .order('created_at', { ascending: false });
+            .from('transactions')
+            .select('*')
+            .order('date', { ascending: false });
 
         if (error) throw error;
-
-        // Transform data into the Transaction interface
-        const allTransactions: Transaction[] = data.flatMap((member) => {
-            const memberName = member.full_name;
-            const memberId = member.id;
-
-            // 1. Map Contributions
-            const contributions = member.contributions.map((c): Transaction => ({
-                id: `cont-${c.id}`, // Ensuring unique ID across different tables
-                reference_id: c.id.toString(),
-                member_id: memberId,
-                member_name: memberName,
-                amount: c.amount.toString(),
-                type: 'contribution' as TransactionType,
-                status: 'completed' as TransactionStatus,
-                date: c.contribution_date,
-                payment_method: 'cash' as PaymentMethod, // Defaulting as per Sanchayika typical use
-                created_at: c.created_at,
-                updated_at: c.updated_at,
-            }));
-
-            // 2. Map Loans
-            const loans = member.loans.map((l): Transaction => ({
-                id: `loan-${l.id}`,
-                reference_id: l.id.toString(),
-                member_id: memberId,
-                member_name: memberName,
-                amount: l.loan_amount.toString(),
-                type: 'loan' as TransactionType,
-                status: (l.status === 'active' ? 'pending' : 'completed') as TransactionStatus,
-                date: l.loan_date,
-                payment_method: 'bank_transfer' as PaymentMethod,
-                description: `Loan Disbursement`,
-                created_at: l.created_at,
-                updated_at: l.updated_at,
-            }));
-
-            // 3. Map Repayments
-            const repayments = member.loans.flatMap((l) =>
-                (l.repayments || []).map((r): Transaction => ({
-                    id: `repay-${r.id}`,
-                    reference_id: r.id.toString(),
-                    member_id: memberId,
-                    member_name: memberName,
-                    amount: r.amount_paid.toString(),
-                    type: 'repayment' as TransactionType,
-                    status: 'completed' as TransactionStatus,
-                    date: r.payment_date,
-                    payment_method: 'cash' as PaymentMethod,
-                    description: `Repayment for Loan #${l.id}`,
-                    created_at: r.created_at,
-                    updated_at: r.updated_at,
-                }))
-            );
-
-            return [...contributions, ...loans, ...repayments];
-        });
-
-        // Sort all transactions by created_at in descending order (newest first)
-        const sortedTransactions = allTransactions.sort((a, b) =>
-            new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-        );
-
-        return NextResponse.json(sortedTransactions);
+        return NextResponse.json(data);
     } catch (error) {
         const message = error instanceof Error ? error.message : 'An unknown error occurred';
         return NextResponse.json({ error: message }, { status: 500 });
@@ -128,7 +40,7 @@ export async function POST(request: Request) {
             errorResult = error;
         }
         //update tables for loan and repayment based on the get
-        else if (type === ("loan" as TransactionType)) {
+        else if (type === ("loan_disbursement" as TransactionType)) {
             const { member_id, amount: loan_amount, date: loan_date } = body;
             const { data, error } = await supabase
                 .from('loans')
@@ -144,7 +56,7 @@ export async function POST(request: Request) {
             result = data;
             errorResult = error;
         }
-        else if (type === ("repayment" as TransactionType)) {
+        else if (type === ("loan_repayment" as TransactionType)) {
             const { reference_id: loan_id, amount: amount_paid, date: payment_date } = body;
             const { data, error } = await supabase
                 .from('repayments')
@@ -179,18 +91,22 @@ export async function PATCH(request: Request) {
     try {
         const supabase = await createClient();
         const { searchParams } = new URL(request.url);
-        const id = searchParams.get('id'); // This is the prefixed ID (e.g., 'cont-1')
+        const realId = searchParams.get('id');
+        const prefix = searchParams.get('type');
         const body = await request.json();
 
-        if (!id) {
+        console.log(realId, prefix)
+
+        if (!realId) {
             return NextResponse.json({ error: 'Transaction ID is required' }, { status: 400 });
         }
 
-        const [prefix, realId] = id.split('-');
         let result = null;
         let errorResult = null;
 
-        if (prefix === 'cont') {
+        console.log(prefix, realId)
+
+        if (prefix === 'deposit') {
             const { data, error } = await supabase
                 .from('contributions')
                 .update({
@@ -202,7 +118,7 @@ export async function PATCH(request: Request) {
                 .single();
             result = data;
             errorResult = error;
-        } else if (prefix === 'loan') {
+        } else if (prefix === 'loan_disbursement') {
             const { data, error } = await supabase
                 .from('loans')
                 .update({
@@ -215,7 +131,7 @@ export async function PATCH(request: Request) {
                 .single();
             result = data;
             errorResult = error;
-        } else if (prefix === 'repay') {
+        } else if (prefix === 'loan_repayment') {
             const { data, error } = await supabase
                 .from('repayments')
                 .update({
@@ -245,28 +161,28 @@ export async function DELETE(request: Request) {
     try {
         const supabase = await createClient();
         const { searchParams } = new URL(request.url);
-        const id = searchParams.get('id');
+        const realId = searchParams.get('id');
+        const prefix = searchParams.get('type');
 
-        if (!id) {
+        if (!realId) {
             return NextResponse.json({ error: 'Transaction ID is required' }, { status: 400 });
         }
 
-        const [prefix, realId] = id.split('-');
         let errorResult = null;
 
-        if (prefix === 'cont') {
+        if (prefix === 'deposit') {
             const { error } = await supabase
                 .from('contributions')
                 .delete()
                 .eq('id', realId);
             errorResult = error;
-        } else if (prefix === 'loan') {
+        } else if (prefix === 'loan_disbursement') {
             const { error } = await supabase
                 .from('loans')
                 .delete()
                 .eq('id', realId);
             errorResult = error;
-        } else if (prefix === 'repay') {
+        } else if (prefix === 'loan_repayment') {
             const { error } = await supabase
                 .from('repayments')
                 .delete()

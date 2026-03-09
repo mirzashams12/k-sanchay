@@ -57,7 +57,7 @@ export default function TransactionList({ transactions, searchTerm, onRefresh }:
 
         setIsDeleting(true);
         try {
-            const response = await fetch(`/api/transactions?id=${selectedTransaction.id}`, {
+            const response = await fetch(`/api/transactions?type=${selectedTransaction?.type}&id=${selectedTransaction?.reference_id}`, {
                 method: "DELETE",
             });
 

@@ -31,7 +31,7 @@ export default function EditTransactionModal({ isOpen, onClose, onSuccess, trans
 
     useEffect(() => {
         if (transaction) {
-            setAmount(transaction.amount.replace(/[^0-9.]/g, ""));
+            setAmount(transaction.amount?.toString().replace(/[^0-9.]/g, ""));
             setStatus(transaction.status);
             setDate(new Date(transaction.date).toISOString().split('T')[0]);
         }
@@ -43,7 +43,7 @@ export default function EditTransactionModal({ isOpen, onClose, onSuccess, trans
         setError(null);
 
         try {
-            const response = await fetch(`/api/transactions?id=${transaction?.id}`, {
+            const response = await fetch(`/api/transactions?type=${transaction?.type}&id=${transaction?.reference_id}`, {
                 method: "PATCH",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
