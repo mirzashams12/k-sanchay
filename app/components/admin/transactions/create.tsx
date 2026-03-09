@@ -207,8 +207,10 @@ export default function CreateTransactionModal({ isOpen, onClose, onSuccess }: C
                                     >
                                         <option value="deposit">Deposit</option>
                                         <option value="withdrawal">Withdrawal</option>
+                                        <option value="loan_disbursement">Loan Disbursement</option>
                                         <option value="loan_repayment">Loan Repayment</option>
                                         <option value="interest">Interest</option>
+                                        <option value="fine">Fine</option>
                                     </select>
                                 </div>
                             </div>

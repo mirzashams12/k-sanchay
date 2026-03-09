@@ -14,7 +14,10 @@ export default function RoleGuard({ children, allowedRoles }: RoleGuardProps) {
     const router = useRouter();
 
     useEffect(() => {
-        if (!loading && (!role || !allowedRoles.includes(role as 'admin' | 'member'))) {
+        if (!role) {
+            return;
+        }
+        if (!loading && (!allowedRoles.includes(role as 'admin' | 'member'))) {
             router.push("/unauthorized");
         }
     }, [role, loading, allowedRoles, router]);
