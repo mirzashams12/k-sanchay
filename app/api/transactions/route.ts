@@ -120,8 +120,6 @@ export async function PATCH(request: Request) {
         let result = null;
         let errorResult = null;
 
-        console.log(prefix, realId)
-
         if (prefix === 'deposit') {
             const { data, error } = await supabase
                 .from('contributions')
