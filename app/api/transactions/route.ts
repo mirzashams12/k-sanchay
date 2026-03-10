@@ -2,13 +2,33 @@ import { createClient } from '@/app/lib/supabase/server';
 import { NextResponse } from 'next/server';
 import { TransactionType } from '@/app/types/transaction';
 
-export async function GET() {
+export async function GET(request: Request) {
     try {
+        const { searchParams } = new URL(request.url);
+        const type = searchParams.get('type');
+        const limitParam = searchParams.get('limit');
+
         const supabase = await createClient();
-        const { data, error } = await supabase
+
+        // 1. Start the query base
+        let query = supabase
             .from('transactions')
             .select('*')
             .order('created_at', { ascending: false });
+
+        // 2. Handle optional Type filtering
+        if (type) {
+            query = query.eq("type", type);
+        }
+
+        // 3. Handle optional Limit / Pagination
+        // If limitParam is null, we don't call .range(), so Supabase returns all rows
+        if (limitParam) {
+            const limit = Math.max(1, parseInt(limitParam));
+            query = query.range(0, limit - 1);
+        }
+
+        const { data, error } = await query;
 
         if (error) throw error;
         return NextResponse.json(data);
