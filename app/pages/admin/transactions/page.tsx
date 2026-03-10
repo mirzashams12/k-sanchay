@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { TransactionType } from '@/app/types';
 import { HandCoins } from 'lucide-react';
 import PageHeader from '@/app/components/admin/transactions/PageHeader';
@@ -9,7 +9,7 @@ import Notification from '@/app/components/admin/transactions/Notification';
 import ActionsGrid from '@/app/components/admin/transactions/ActionsGrid';
 import TransactionList from '@/app/components/admin/transactions/TransactionList';
 import { AnimatePresence, motion } from 'framer-motion';
-import { AlertTriangle, Loader2, X } from 'lucide-react';
+import { AlertTriangle } from 'lucide-react';
 
 export default function TransactionsPage() {
     const [transactions, setTransactions] = useState<any[]>([]);
@@ -75,7 +75,9 @@ export default function TransactionsPage() {
         }
     };
 
-    const filteredTransactions = transactions.filter(t => t.type === (activeTab || 'deposit'));
+    const filteredTransactions = transactions.filter(t => t.type === (activeTab || 'deposit')); //get first 3 transactions
+    const recentTransactions = filteredTransactions.slice(0, 3);
+
 
     return (
         <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-20 lg:pb-8">
@@ -110,7 +112,7 @@ export default function TransactionsPage() {
 
                 {activeTab && (
                     <TransactionList
-                        transactions={filteredTransactions}
+                        transactions={recentTransactions}
                         loading={loading}
                         onDelete={(id, type) => setDeleteTarget({ id, type })}
                     />
