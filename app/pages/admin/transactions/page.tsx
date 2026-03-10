@@ -20,13 +20,13 @@ export default function TransactionsPage() {
     const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
 
     useEffect(() => {
-        fetchTransactions();
-    }, []);
+        fetchTransactions(activeTab || undefined);
+    }, [activeTab]);
 
-    const fetchTransactions = async () => {
+    const fetchTransactions = async (type?: TransactionType) => {
         try {
             setLoading(true);
-            const res = await fetch('/api/transactions');
+            const res = await fetch(`/api/transactions?limit=3${type ? `&type=${type}` : ''}`);
             if (!res.ok) throw new Error('Failed to fetch transactions');
             const data = await res.json();
             setTransactions(data);
@@ -48,7 +48,7 @@ export default function TransactionsPage() {
             if (!res.ok) throw new Error('Failed to delete');
 
             setMessage({ text: 'Deleted successfully', type: 'success' });
-            await fetchTransactions();
+            await fetchTransactions(deleteTarget.type as TransactionType);
             setDeleteTarget(null);
         } catch (error) {
             console.error(error);
@@ -67,16 +67,13 @@ export default function TransactionsPage() {
             if (!res.ok) throw new Error('Failed to update');
 
             setMessage({ text: 'Updated successfully', type: 'success' });
-            fetchTransactions();
+            fetchTransactions(transaction.type as TransactionType);
             setIsFormOpen(false);
         } catch (error) {
             console.error(error);
             setMessage({ text: 'Failed to update transaction', type: 'error' });
         }
     };
-
-    const filteredTransactions = transactions.filter(t => t.type === (activeTab || 'deposit')); //get first 3 transactions
-    const recentTransactions = filteredTransactions.slice(0, 3);
 
 
     return (
@@ -93,7 +90,7 @@ export default function TransactionsPage() {
                     setActiveTab={setActiveTab}
                     isFormOpen={isFormOpen}
                     setIsFormOpen={setIsFormOpen}
-                    onSuccess={fetchTransactions}
+                    onSuccess={() => fetchTransactions(activeTab as TransactionType)}
                     setMessage={setMessage}
                     transactions={transactions}
                     onDelete={(id, type) => setDeleteTarget({ id, type })}
@@ -112,7 +109,7 @@ export default function TransactionsPage() {
 
                 {activeTab && (
                     <TransactionList
-                        transactions={recentTransactions}
+                        transactions={transactions}
                         loading={loading}
                         onDelete={(id, type) => setDeleteTarget({ id, type })}
                     />
