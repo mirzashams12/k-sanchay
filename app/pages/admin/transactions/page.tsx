@@ -1,104 +1,165 @@
-"use client";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+'use client';
 
-import { useState, useEffect } from "react";
-import {
-    Search,
-    Filter,
-    Download,
-    Calendar,
-    Plus,
-    Loader2
-} from "lucide-react";
-import TransactionList from "@/app/components/admin/transactions/list";
-import CreateTransactionModal from "@/app/components/admin/transactions/create";
-import { Transaction } from "@/app/types/transaction";
+import { useState, useEffect } from 'react';
+import { TransactionType } from '@/app/types';
+import { HandCoins } from 'lucide-react';
+import PageHeader from '@/app/components/admin/transactions/PageHeader';
+import Notification from '@/app/components/admin/transactions/Notification';
+import ActionsGrid from '@/app/components/admin/transactions/ActionsGrid';
+import TransactionList from '@/app/components/admin/transactions/TransactionList';
+import { AnimatePresence, motion } from 'framer-motion';
+import { AlertTriangle } from 'lucide-react';
 
 export default function TransactionsPage() {
-    const [searchTerm, setSearchTerm] = useState("");
-    const [transactions, setTransactions] = useState<Transaction[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
-    const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-
-    const fetchTransactions = async () => {
-        try {
-            const response = await fetch("/api/transactions");
-            if (response.ok) {
-                const data = await response.json();
-                setTransactions(data);
-            }
-        } catch (error) {
-            console.error("Failed to fetch transactions:", error);
-        } finally {
-            setIsLoading(false);
-        }
-    };
+    const [transactions, setTransactions] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [activeTab, setActiveTab] = useState<TransactionType | null>(null);
+    const [isFormOpen, setIsFormOpen] = useState(false);
+    const [deleteTarget, setDeleteTarget] = useState<{ id: string; type: string } | null>(null);
+    const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
 
     useEffect(() => {
         fetchTransactions();
     }, []);
 
+    const fetchTransactions = async () => {
+        try {
+            setLoading(true);
+            const res = await fetch('/api/transactions');
+            if (!res.ok) throw new Error('Failed to fetch transactions');
+            const data = await res.json();
+            setTransactions(data);
+        } catch (error) {
+            console.error(error);
+            setMessage({ text: 'Failed to load transactions', type: 'error' });
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const confirmDelete = async () => {
+        if (!deleteTarget) return;
+        try {
+            const res = await fetch(`/api/transactions?id=${deleteTarget.id}&type=${deleteTarget.type}`, {
+                method: 'DELETE',
+            });
+
+            if (!res.ok) throw new Error('Failed to delete');
+
+            setMessage({ text: 'Deleted successfully', type: 'success' });
+            await fetchTransactions();
+            setDeleteTarget(null);
+        } catch (error) {
+            console.error(error);
+            setMessage({ text: 'Failed to delete transaction', type: 'error' });
+        }
+    };
+
+    const handleEdit = async (transaction: any) => {
+        try {
+            const res = await fetch(`/api/transactions?id=${transaction.reference_id}&type=${transaction.type}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(transaction),
+            });
+
+            if (!res.ok) throw new Error('Failed to update');
+
+            setMessage({ text: 'Updated successfully', type: 'success' });
+            fetchTransactions();
+            setIsFormOpen(false);
+        } catch (error) {
+            console.error(error);
+            setMessage({ text: 'Failed to update transaction', type: 'error' });
+        }
+    };
+
+    const filteredTransactions = transactions.filter(t => t.type === (activeTab || 'deposit')); //get first 3 transactions
+    const recentTransactions = filteredTransactions.slice(0, 3);
+
+
     return (
-        <div className="space-y-8">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div>
-                    <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Transaction History</h1>
-                    <p className="text-slate-500 dark:text-slate-400">Track all financial activities across the organization.</p>
-                </div>
-                <div className="flex gap-3">
-                    <button className="flex items-center justify-center gap-2 px-4 py-2.5 border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 rounded-xl font-medium transition-all hover:bg-slate-50 dark:hover:bg-slate-800">
-                        <Download className="w-5 h-5" />
-                        Export
-                    </button>
-                    <button
-                        onClick={() => setIsCreateModalOpen(true)}
-                        className="flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-medium transition-all shadow-lg shadow-blue-500/20"
-                    >
-                        <Plus className="w-5 h-5" />
-                        New Transaction
-                    </button>
-                </div>
-            </div>
+        <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-20 lg:pb-8">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+                <PageHeader />
 
-            <div className="flex flex-col md:flex-row gap-4">
-                <div className="relative flex-1">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                    <input
-                        type="text"
-                        placeholder="Search by user or ID..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                {message && (
+                    <Notification message={message} onClose={() => setMessage(null)} />
+                )}
+
+                <ActionsGrid
+                    activeTab={activeTab}
+                    setActiveTab={setActiveTab}
+                    isFormOpen={isFormOpen}
+                    setIsFormOpen={setIsFormOpen}
+                    onSuccess={fetchTransactions}
+                    setMessage={setMessage}
+                    transactions={transactions}
+                    onDelete={(id, type) => setDeleteTarget({ id, type })}
+                    onEdit={handleEdit}
+                />
+
+                {!activeTab && (
+                    <div className="text-center py-20 bg-white dark:bg-slate-900 rounded-3xl border-2 border-dashed border-slate-200 dark:border-slate-800">
+                        <div className="w-20 h-20 bg-blue-50 dark:bg-blue-900/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <HandCoins className="w-10 h-10 text-blue-500" />
+                        </div>
+                        <h3 className="text-xl font-bold text-slate-900 dark:text-white">Select a category to manage</h3>
+                        <p className="text-slate-500 mt-2">Choose an action above to view history and record new entries</p>
+                    </div>
+                )}
+
+                {activeTab && (
+                    <TransactionList
+                        transactions={recentTransactions}
+                        loading={loading}
+                        onDelete={(id, type) => setDeleteTarget({ id, type })}
                     />
-                </div>
-                <div className="flex gap-2">
-                    <button className="flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
-                        <Calendar className="w-5 h-5" />
-                        Date Range
-                    </button>
-                    <button className="flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
-                        <Filter className="w-5 h-5" />
-                        Filters
-                    </button>
-                </div>
+                )}
             </div>
 
-            {isLoading ? (
-                <div className="flex flex-col items-center justify-center py-20 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800">
-                    <Loader2 className="w-8 h-8 text-blue-600 animate-spin mb-4" />
-                    <p className="text-slate-500">Loading transactions...</p>
-                </div>
-            ) : (
-                <TransactionList transactions={transactions} searchTerm={searchTerm} onRefresh={fetchTransactions} />
-            )}
-
-            <CreateTransactionModal
-                isOpen={isCreateModalOpen}
-                onClose={() => setIsCreateModalOpen(false)}
-                onSuccess={() => {
-                    setIsCreateModalOpen(false);
-                    fetchTransactions();
-                }}
-            />
+            <AnimatePresence>
+                {deleteTarget && (
+                    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => setDeleteTarget(null)}
+                            className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
+                        />
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.95 }}
+                            className="relative w-full max-w-sm bg-white dark:bg-slate-900 rounded-2xl shadow-2xl p-6 text-center"
+                        >
+                            <div className="mx-auto w-12 h-12 bg-rose-100 dark:bg-rose-900/30 rounded-full flex items-center justify-center mb-4">
+                                <AlertTriangle className="w-6 h-6 text-rose-600" />
+                            </div>
+                            <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">Delete Transaction?</h3>
+                            <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">
+                                This action cannot be undone. The transaction record will be permanently removed from the ledger.
+                            </p>
+                            <div className="flex gap-3">
+                                <button
+                                    onClick={() => setDeleteTarget(null)}
+                                    className="flex-1 px-4 py-2.5 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 font-medium rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={confirmDelete}
+                                    className="flex-1 px-4 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-medium rounded-xl transition-all shadow-lg shadow-rose-500/20"
+                                >
+                                    Delete
+                                </button>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
         </div>
     );
 }

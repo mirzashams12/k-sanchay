@@ -1,5 +1,5 @@
 export type TransactionStatus = 'completed' | 'pending' | 'failed' | 'cancelled';
-export type TransactionType = 'deposit' | 'withdrawal' | 'loan_disbursement' | 'loan_repayment' | 'interest' | 'fine';
+export type TransactionType = 'deposit' | 'withdrawal' | 'loan_disbursement' | 'loan_repayment' | 'interest' | 'fine' | 'payout';
 export type PaymentMethod = 'cash' | 'bank_transfer' | 'upi' | 'check';
 
 export interface Transaction {

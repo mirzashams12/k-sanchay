@@ -8,7 +8,7 @@ export async function GET() {
         const { data, error } = await supabase
             .from('transactions')
             .select('*')
-            .order('date', { ascending: false });
+            .order('created_at', { ascending: false });
 
         if (error) throw error;
         return NextResponse.json(data);
@@ -71,6 +71,22 @@ export async function POST(request: Request) {
             result = data;
             errorResult = error;
         }
+        else if (type === ("payout" as TransactionType)) {
+            // Assuming a 'payouts' table exists, or mapping to expenses
+            const { member_id, amount, date: payout_date } = body;
+            const { data, error } = await supabase
+                .from('payouts') // Ensure this table exists in Supabase
+                .insert([{
+                    member_id,
+                    amount,
+                    payout_date
+                }])
+                .select()
+                .single();
+
+            result = data;
+            errorResult = error;
+        }
 
         else {
             throw new Error('Invalid transaction type');
@@ -104,8 +120,6 @@ export async function PATCH(request: Request) {
         let result = null;
         let errorResult = null;
 
-        console.log(prefix, realId)
-
         if (prefix === 'deposit') {
             const { data, error } = await supabase
                 .from('contributions')
@@ -137,6 +151,18 @@ export async function PATCH(request: Request) {
                 .update({
                     amount_paid: body.amount,
                     payment_date: body.date
+                })
+                .eq('id', realId)
+                .select()
+                .single();
+            result = data;
+            errorResult = error;
+        } else if (prefix === 'payout') {
+            const { data, error } = await supabase
+                .from('payouts')
+                .update({
+                    amount: body.amount,
+                    payout_date: body.date
                 })
                 .eq('id', realId)
                 .select()
@@ -185,6 +211,12 @@ export async function DELETE(request: Request) {
         } else if (prefix === 'loan_repayment') {
             const { error } = await supabase
                 .from('repayments')
+                .delete()
+                .eq('id', realId);
+            errorResult = error;
+        } else if (prefix === 'payout') {
+            const { error } = await supabase
+                .from('payouts')
                 .delete()
                 .eq('id', realId);
             errorResult = error;
